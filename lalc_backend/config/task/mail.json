@@ -20,7 +20,7 @@
         "action":"click",
         "params":{
             "template":"red_exclaimation",
-            "mask":[1010, 60, 70, 80],
+            "mask":[1080, 60, 70, 80],
             "target_offset":[-10, 10]
         },
         "next":[

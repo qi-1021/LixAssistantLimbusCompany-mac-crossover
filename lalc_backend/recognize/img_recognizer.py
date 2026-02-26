@@ -60,7 +60,7 @@ class ImageRecognizer:
         for i in tmp:
             res.append((i[0]+mask[0], i[1]+mask[1], i[2]))
         log_pic = None if len(res) == 0 else debug_image[0]
-        logger.debug(f"执行模板匹配，模板{template_name}, 对目标图片做截取{mask}, 对模板图片做截取{mask_template}, 匹配结果: {res}", log_pic)
+        logger.debug(f"执行模板匹配，模板 {template_name}, 对目标图片做截取{mask}, 对模板图片做截取{mask_template}, 阈值 {threshold},匹配结果: {res}", log_pic)
         return res
     
 
@@ -86,7 +86,7 @@ class ImageRecognizer:
         for i in tmp:
             res.append((i[0]+mask[0], i[1]+mask[1], i[2]))
         log_pic = None if len(res) == 0 else debug_image[0]
-        logger.debug(f"执行精确模板匹配，模板{template_name}, 对目标图片做截取{mask}，匹配结果：{res}", log_pic)
+        logger.debug(f"执行精确模板匹配，模板{template_name}, 对目标图片做截取{mask}, 阈值 {threshold}匹配结果：{res}", log_pic)
         return res
 
     def pyramid_template_match(self, screenshot:Image.Image, template:str, threshold=0.7, visualize=False, grayscale=True, mask=None):
@@ -110,7 +110,7 @@ class ImageRecognizer:
         for i in tmp:
             res.append((i[0]+mask[0], i[1]+mask[1], i[2], i[3]))
         log_pic = None if len(res) == 0 else debug_image[0]
-        logger.debug(f"执行金字塔模板匹配，模板{template_name}, 对目标图片做截取{mask}，匹配结果：{res}", log_pic)
+        logger.debug(f"执行金字塔模板匹配，模板{template_name}, 对目标图片做截取{mask}, 阈值 {threshold}匹配结果：{res}", log_pic)
         return res
 
     def color_template_match(self, screenshot:Image.Image, template:str, threshold=0.7, visualize=False, grayscale=False, mask=None):

@@ -181,7 +181,10 @@ if __name__ == "__main__":
         # templates.append(get_image("mirror_theme_pack_new"))
         # templates.append(get_image("theme_pack_detail"))
         # templates.append(get_image("win_rate"))
-        templates.append(get_image("to_corrode_0%"))
+        # templates.append(get_image("to_corrode_0%"))
+
+        templates.append(get_image("details"))
+        templates.append(get_image("main_drive_with_text"))
 
         # templates.append(get_image("Dark Vestige"))
         # templates.append(get_image("Faint Vestige"))
