@@ -365,12 +365,18 @@ def exec_battle_winrate(self, node: TaskNode, func):
 def exec_back_to_init_page(self, node: TaskNode, func):
     tmp_screenshot = input_handler.capture_screenshot()
     logger.info("正在尝试返回主页", tmp_screenshot)
-    if recognize_handler.template_match(tmp_screenshot, "left_top_arrow"):
+    if res := recognize_handler.template_match(tmp_screenshot, "rewards_acquired_confirm"):
+        logger.debug("检测到的取奖励的确认")
+        input_handler.click(res[0][0], res[0][1])
+    elif res := recognize_handler.template_match(tmp_screenshot, "daily_login_close"):
+        logger.debug("检测到日常登录的关闭")
+        input_handler.click(res[0][0], res[0][1])
+    elif pos := recognize_handler.template_match(tmp_screenshot, "left_top_arrow"):
         # 对于左上角有箭头的，总之先点了
-        pos = recognize_handler.template_match(tmp_screenshot, "left_top_arrow")
-        if len(pos) > 0:
-            input_handler.click(pos[0][0], pos[0][1])
+        logger.debug("尝试互动左上角有返回按钮")
+        input_handler.click(pos[0][0], pos[0][1])
     elif recognize_handler.template_match(tmp_screenshot, "win_rate"):
+        logger.debug("检测到处于战斗之中，尝试退出")
         input_handler.click(1230, 45)
         time.sleep(2)
         input_handler.click(640, 400)  # 非镜牢的退出

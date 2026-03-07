@@ -1,5 +1,5 @@
 {
-  "check_node_target_count": 18,
+  "check_node_target_count": 0,
   "mirror_stop_purchase_gift_money": 800,
   "mirror_mode": "normal",
   "accept_reward": true,
@@ -13,20 +13,14 @@
     "node_boss_encounter": 0
   },
   "mirror_team_styles": [
-    "Rupture",
-    "Bleed",
     "Poise",
     "Burn",
     "Charge",
-    "Sinking"
+    "Sinking",
+    "Rupture",
+    "Bleed"
   ],
   "mirror_team_ego_gift_styles": [
-    [
-      "Rupture"
-    ],
-    [
-      "Bleed"
-    ],
     [
       "Poise"
     ],
@@ -38,6 +32,12 @@
     ],
     [
       "Sinking"
+    ],
+    [
+      "Rupture"
+    ],
+    [
+      "Bleed"
     ]
   ],
   "mirror_team_ego_allow_list": [
@@ -172,80 +172,6 @@
   ],
   "mirror_replace_skill": [
     {
-      "Faust": [
-        3,
-        2,
-        1
-      ],
-      "Ryoshu": [
-        3,
-        1,
-        2
-      ],
-      "Hong Lu": [
-        3,
-        2,
-        1
-      ],
-      "Heathcliff": [
-        3,
-        2,
-        1
-      ],
-      "Ishmael": [
-        3,
-        2,
-        1
-      ],
-      "Rodion": [
-        3,
-        2,
-        1
-      ],
-      "Sinclair": [
-        3,
-        1,
-        2
-      ]
-    },
-    {
-      "Yi Sang": [
-        1,
-        2,
-        3
-      ],
-      "Don Quixote": [
-        1,
-        2,
-        3
-      ],
-      "Hong Lu": [
-        1,
-        2,
-        3
-      ],
-      "Heathcliff": [
-        3,
-        2,
-        1
-      ],
-      "Ishmael": [
-        1,
-        2,
-        3
-      ],
-      "Rodion": [
-        1,
-        2,
-        3
-      ],
-      "Gregor": [
-        3,
-        2,
-        1
-      ]
-    },
-    {
       "Don Quixote": [
         3,
         2,
@@ -391,6 +317,80 @@
         3,
         1,
         2
+      ]
+    },
+    {
+      "Faust": [
+        3,
+        2,
+        1
+      ],
+      "Ryoshu": [
+        3,
+        1,
+        2
+      ],
+      "Hong Lu": [
+        3,
+        2,
+        1
+      ],
+      "Heathcliff": [
+        3,
+        2,
+        1
+      ],
+      "Ishmael": [
+        3,
+        2,
+        1
+      ],
+      "Rodion": [
+        3,
+        2,
+        1
+      ],
+      "Sinclair": [
+        3,
+        1,
+        2
+      ]
+    },
+    {
+      "Yi Sang": [
+        1,
+        2,
+        3
+      ],
+      "Don Quixote": [
+        1,
+        2,
+        3
+      ],
+      "Hong Lu": [
+        1,
+        2,
+        3
+      ],
+      "Heathcliff": [
+        3,
+        2,
+        1
+      ],
+      "Ishmael": [
+        1,
+        2,
+        3
+      ],
+      "Rodion": [
+        1,
+        2,
+        3
+      ],
+      "Gregor": [
+        3,
+        2,
+        1
       ]
     }
   ],
@@ -474,31 +474,6 @@
   ],
   "team_orders": [
     [
-      "Hong Lu",
-      "Ryoshu",
-      "Faust",
-      "Sinclair",
-      "Heathcliff",
-      "Ishmael",
-      "Rodion",
-      "Yi Sang",
-      "Outis",
-      "Gregor"
-    ],
-    [
-      "Don Quixote",
-      "Rodion",
-      "Ishmael",
-      "Yi Sang",
-      "Gregor",
-      "Heathcliff",
-      "Outis",
-      "Ryoshu",
-      "Meursault",
-      "Hong Lu",
-      "Faust"
-    ],
-    [
       "Ryoshu",
       "Heathcliff",
       "Hong Lu",
@@ -550,14 +525,39 @@
       "Don Quixote",
       "Meursault",
       "Sinclair"
+    ],
+    [
+      "Hong Lu",
+      "Ryoshu",
+      "Faust",
+      "Sinclair",
+      "Heathcliff",
+      "Ishmael",
+      "Rodion",
+      "Yi Sang",
+      "Outis",
+      "Gregor"
+    ],
+    [
+      "Don Quixote",
+      "Rodion",
+      "Ishmael",
+      "Yi Sang",
+      "Gregor",
+      "Heathcliff",
+      "Outis",
+      "Ryoshu",
+      "Meursault",
+      "Hong Lu",
+      "Faust"
     ]
   ],
   "team_indexes": [
-    6,
-    1,
     2,
     3,
     4,
-    5
+    5,
+    6,
+    1
   ]
 }

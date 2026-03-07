@@ -8,7 +8,7 @@ def exec_mirror_select_event_effect(self, node: TaskNode, func):
     if len(choices) > 0:
         input_handler.click(*choices[0][:2])
         time.sleep(0.5)
-        input_handler.key_press("enter")
+        input_handler.click(640, 520)
 
 
 @TaskExecution.register("mirror_defeat")

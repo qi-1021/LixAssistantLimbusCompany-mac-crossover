@@ -9,7 +9,7 @@
         },
         "next":[
             "mirror_enter",
-            "mirror_entry"
+            "main_circle_center"
         ]
     },
     "mirror_enter":{
@@ -126,6 +126,7 @@
         "next":[
             "mirror_ego_gift_get",
             "mirror_select_theme_pack",
+            "mirror_select_event_effect",
             "mirror_select_next_node",
             "mirror_ready_to_battle",
             "mirror_battle",
