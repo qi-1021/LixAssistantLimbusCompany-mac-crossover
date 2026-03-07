@@ -188,7 +188,7 @@
         <a href="https://github.com/xhzxmy">
             <img src="https://avatars.githubusercontent.com/u/63407409?v=4" width="100;" alt="xhzxmy"/>
             <br />
-            <sub><b>xhzxmy</b></sub>
+            <sub><b>Xhzxmy</b></sub>
         </a>
     </td></tr>
 <tr>
