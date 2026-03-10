@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import time
+import platform
 import matplotlib.pyplot as plt
 from PIL import Image
 import os
@@ -14,6 +15,19 @@ from recognize.img_registry import get_image, register_images_from_directory, ge
 #     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 #     from recognize.utils import pil_to_cv2, mask_screenshot
 #     from recognize.img_registry import get_image, register_images_from_directory, get_images_by_tag
+
+
+IS_APPLE_SILICON = platform.system() == "Darwin" and platform.machine().lower() in {"arm64", "aarch64"}
+
+
+def _preprocess_template_match_image(image):
+    clahe = cv2.createCLAHE(clipLimit=1.5, tileGridSize=(8, 8))
+    image = clahe.apply(image)
+    if IS_APPLE_SILICON:
+        image = cv2.bilateralFilter(image, 5, 35, 35)
+    else:
+        image = cv2.GaussianBlur(image, (5, 5), 0)
+    return image
 
 
 def template_match(screenshot, template, threshold=0.8, visualize=False, grayscale=True, screenshot_scale=1, debug_image=None):
@@ -38,15 +52,8 @@ def template_match(screenshot, template, threshold=0.8, visualize=False, graysca
     #     screenshot = cv2.equalizeHist(screenshot)
     #     template = cv2.equalizeHist(template)
 
-    clahe = cv2.createCLAHE(clipLimit=1.5, tileGridSize=(8, 8))
-    screenshot = clahe.apply(screenshot)
-    template = clahe.apply(template)
-
-    # template = cv2.medianBlur(template, 5)
-    # screenshot = cv2.medianBlur(screenshot, 5)
-
-    template = cv2.GaussianBlur(template, (5, 5), 0)
-    screenshot = cv2.GaussianBlur(screenshot, (5, 5), 0)
+    screenshot = _preprocess_template_match_image(screenshot)
+    template = _preprocess_template_match_image(template)
 
     if screenshot_scale != 1:
         h, w = screenshot.shape[:2]
@@ -57,26 +64,39 @@ def template_match(screenshot, template, threshold=0.8, visualize=False, graysca
         )
 
 
-    # 检查模板尺寸是否合适
-    if (template.shape[0] > screenshot.shape[0] or 
-        template.shape[1] > screenshot.shape[1]):
-        return []
-
-    # 执行模板匹配
-    result = cv2.matchTemplate(screenshot, template, cv2.TM_CCOEFF_NORMED)
-    
-    # 查找匹配位置
-    locations = np.where(result >= threshold)
-    
     matches = []
-    for pt in zip(*locations[::-1]):  # 转换为(x, y)坐标
-        # 计算中心坐标
-        cx = pt[0] + template.shape[1] // 2
-        cy = pt[1] + template.shape[0] // 2
-        score = result[pt[1], pt[0]]
-        cx_orig = int(cx / screenshot_scale)
-        cy_orig = int(cy / screenshot_scale)
-        matches.append((cx_orig, cy_orig, score))
+    candidate_scales = [1.0]
+    if IS_APPLE_SILICON:
+        candidate_scales = [0.92, 0.96, 1.0, 1.04, 1.08]
+
+    for template_scale in candidate_scales:
+        if template_scale == 1.0:
+            working_template = template
+        else:
+            working_template = cv2.resize(
+                template,
+                None,
+                fx=template_scale,
+                fy=template_scale,
+                interpolation=cv2.INTER_LINEAR,
+            )
+
+        if (
+            working_template.shape[0] > screenshot.shape[0]
+            or working_template.shape[1] > screenshot.shape[1]
+        ):
+            continue
+
+        result = cv2.matchTemplate(screenshot, working_template, cv2.TM_CCOEFF_NORMED)
+        locations = np.where(result >= threshold)
+
+        for pt in zip(*locations[::-1]):
+            cx = pt[0] + working_template.shape[1] // 2
+            cy = pt[1] + working_template.shape[0] // 2
+            score = result[pt[1], pt[0]]
+            cx_orig = int(cx / screenshot_scale)
+            cy_orig = int(cy / screenshot_scale)
+            matches.append((cx_orig, cy_orig, float(score)))
     
     # 按匹配分数从高到低排序
     matches.sort(key=lambda x: x[2], reverse=True)

@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 from PIL import Image
 import os
+import re
+from difflib import SequenceMatcher
 
 from input.input_handler import input_handler
 from recognize.template_match import template_match
@@ -17,6 +19,26 @@ from recognize.precise_template_match import precise_template_match
 from utils.logger import init_logger
 
 logger = init_logger()
+
+
+def _normalize_ocr_text(text: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", (text or "").lower())
+
+
+def _text_match_score(target_text: str, detected_text: str) -> float:
+    target_norm = _normalize_ocr_text(target_text)
+    detected_norm = _normalize_ocr_text(detected_text)
+
+    if not target_norm or not detected_norm:
+        return 0.0
+
+    if target_norm in detected_norm:
+        return 1.0
+
+    if target_norm.isdigit() or detected_norm.isdigit():
+        return 0.0
+
+    return SequenceMatcher(None, target_norm, detected_norm).ratio()
 
 
 class ImageRecognizer:
@@ -219,8 +241,10 @@ class ImageRecognizer:
         
         found_texts = []
         for text in detected_texts:
-            if target_text in text[0]:
+            score = _text_match_score(target_text, text[0])
+            if score >= 0.78:
                 found_texts.append(text)
+        found_texts.sort(key=lambda item: (_text_match_score(target_text, item[0]), item[3]), reverse=True)
         logger.debug(f"执行文字查找，目标文字{target_text}, 对目标图片做截取{mask}，查找结果：{found_texts}")
         return found_texts
 

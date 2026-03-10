@@ -1,0 +1,13 @@
+2026-03-10 13:35:10,500 | INFO | [run_forever] WebSocket 服务器启动，监听 ws://localhost:8765
+2026-03-10 13:35:10,500 | DEBUG | [_server_coro] _server_coro 启动
+2026-03-10 13:35:10,500 | DEBUG | [_timeout_coro] _timeout_coro 启动
+2026-03-10 13:35:31,523 | INFO | [_check_timeout] 服务器超时自动关闭：超过20秒无客户端连接
+2026-03-10 13:35:31,525 | INFO | [_shutdown_server] 开始关闭服务器...
+2026-03-10 13:35:31,525 | DEBUG | [stop] 任务线已停止，无需重复 stop
+2026-03-10 13:35:31,526 | DEBUG | [_server_coro] _server_coro 结束
+2026-03-10 13:35:31,526 | DEBUG | [_timeout_coro] _timeout_coro 结束
+2026-03-10 13:35:31,526 | DEBUG | [run_forever] run_forever 收到 CancelledError，准备退出
+2026-03-10 13:35:31,526 | DEBUG | [run_forever] run_forever 结束，进程将退出
+检测到窗口: 夸克 - LixAssistantLimbusCompany-mac-crossover/doc/CONTRIBUTING.md at main · qi-1021/LixAssistantLimbusCompany-mac-crossover
+位置: (0, 39, 1710, 992) (匹配分数: 10)
+✓ 自动检测到游戏窗口: left=0, top=39, width=1710, height=992

@@ -5,7 +5,8 @@
         "inverse":true, 
         "params":{
             "template":"inferno",
-            "post_delay": 1
+            "threshold": 0.70,
+            "post_delay": 2
         },
         "next":[
             "mirror_enter",
@@ -17,6 +18,7 @@
         "action":"click",
         "params":{
             "template":"inferno",
+            "threshold": 0.72,
             "target":[510, 310],
             "post_delay": 1
         },
@@ -30,6 +32,7 @@
         "action":"click",
         "params":{
             "template":"dungeon_enter",
+            "threshold": 0.72,
             "target":[510, 310],
             "post_delay": 1
         },
@@ -80,6 +83,7 @@
         "action":"choose_team",
         "params":{
             "template":"details",
+            "threshold": 0.72,
             "cfg_type":"mirror"
         },
         "next":[
@@ -91,6 +95,7 @@
         "action":"mirror_choose_star",
         "params":{
             "template":"grace_of_the_star_of_names_and_spiders",
+            "threshold": 0.70,
             "cfg_type":"mirror"
         },
         "next":[
@@ -102,6 +107,7 @@
         "action":"mirror_select_initial_ego_gift",
         "params":{
             "template":"selected_ego_gift",
+            "threshold": 0.70,
             "cfg_type":"mirror",
             "post_delay": 2
         },
@@ -123,6 +129,9 @@
     "mirror_circle_center":{
         "desc":"镜牢初始化后，到结算的中间过程汇总，由于模块不多，也没有很严格的流程，所以直接死循环处理",
         "action":"error_handler",
+        "params":{
+            "_max_iterations": 150
+        },
         "next":[
             "mirror_ego_gift_get",
             "mirror_select_theme_pack",

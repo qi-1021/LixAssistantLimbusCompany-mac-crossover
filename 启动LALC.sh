@@ -114,7 +114,17 @@ echo "📱 启动 LALC 前端应用..."
 cd "$ROOT_DIR/lalc_frontend"
 
 # 启动 Flutter 应用
-open build/macos/Build/Products/Release/lalc_frontend.app &
+FRONTEND_APP=""
+if [ -d "build/macos/Build/Products/Release/lalc_frontend.app" ]; then
+  FRONTEND_APP="build/macos/Build/Products/Release/lalc_frontend.app"
+elif [ -d "build/macos/Build/Products/Debug/lalc_frontend.app" ]; then
+  FRONTEND_APP="build/macos/Build/Products/Debug/lalc_frontend.app"
+else
+  echo "${RED}✗ 未找到前端应用，请先构建 macOS 前端${NC}"
+  exit 1
+fi
+
+open "$FRONTEND_APP" &
 FRONTEND_PID=$!
 echo "${GREEN}✓ 前端应用已启动${NC}"
 
@@ -124,12 +134,12 @@ echo "✅ LALC 前后端服务已启动"
 echo ""
 echo "详情："
 echo "  • 后端服务: ws://localhost:8765"
-echo "  • 前端应用: macOS 应用窗口"
+echo "  • 前端应用: $FRONTEND_APP"
 echo "  • 日志位置: lalc_backend/logs/server.log"
 echo ""
 echo "提示："
 echo "  • 在『边狱巴士』游戏窗口启动后，点击『开始自动化』"
-echo "  • 关闭此终端窗口将停止后端服务和前端亲应用"
+echo "  • 关闭此终端窗口将停止后端服务和前端应用"
 echo "════════════════════════════════════════════════════════"
 echo ""
 

@@ -216,7 +216,8 @@ class AsyncTaskPipeline:
         if self._state != STATE_STOPPED:
             self.logger.debug("任务线未处于 STOPPED，忽略本次 start")
             return
-            
+
+        self._stop_event.clear()
         self._state = STATE_RUNNING
         self.add_start_task(entry)
         
@@ -236,6 +237,10 @@ class AsyncTaskPipeline:
         异步工作协程，不断处理任务栈中的函数
         """
         self.logger.debug("异步任务工作协程开始运行")
+        task_execution_count = {}  # 记录每个任务的执行次数
+        consecutive_same_task = 0  # 连续执行相同任务的次数
+        last_task_name = None
+        
         try:
             while self.task_stack and not self._stop_event.is_set():
                 # 检查是否处于暂停状态
@@ -246,10 +251,30 @@ class AsyncTaskPipeline:
                 # 弹出栈顶的函数
                 pre_task_name, func = self.task_stack.pop()
                 
+                # 循环保护：检测重复任务
+                if pre_task_name == last_task_name:
+                    consecutive_same_task += 1
+                    if consecutive_same_task > 50:
+                        self.logger.warning(f"检测到任务 {pre_task_name} 连续执行{consecutive_same_task}次，可能存在死循环")
+                else:
+                    consecutive_same_task = 0
+                    last_task_name = pre_task_name
+                
+                # 记录任务执行次数
+                task_execution_count[pre_task_name] = task_execution_count.get(pre_task_name, 0) + 1
+                if task_execution_count[pre_task_name] > 200:
+                    self.logger.error(f"任务 {pre_task_name} 执行次数超过200次，强制停止以避免死循环")
+                    await self.stop()
+                    break
+                
                 # 执行函数
                 cur_task_name, do_action_func, *get_next_funcs = await asyncio.get_event_loop().run_in_executor(
                     None, self.task_execution.execute, pre_task_name, func
                 )
+
+                if self._stop_event.is_set() or input_handler._stop_flag.is_set():
+                    self.logger.debug("检测到 stop 信号，丢弃当前任务后续动作")
+                    break
                 
                 # 压栈规则：先压 get_next_func，再压 do_action_func
                 for next_func in reversed(get_next_funcs):
@@ -415,11 +440,15 @@ class AsyncTaskPipeline:
             self.logger.debug("任务线已停止，无需重复 stop")
             return
 
+        self._stop_event.set()
+        self.task_stack.clear()
         input_handler.stop()
-        await self.resume()
+
+        input_handler.resume()
+        self._pause_event.set()
 
         self._send_finish_notification()
-            
+
         self._state = STATE_STOPPED
         if self._worker_task:
             if not self._worker_task.done():

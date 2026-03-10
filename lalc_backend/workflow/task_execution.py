@@ -200,10 +200,16 @@ class TaskExecution:
         _safe_broadcast(log_msg)
 
         if action_name in self.handlers:
+            if input_handler._stop_flag.is_set():
+                return (cur_task.name, None, None)
             time.sleep(cur_task.get_param("pre_delay"))
+            if input_handler._stop_flag.is_set():
+                return (cur_task.name, None, None)
             res = self.handlers[action_name](cur_task, func)
             if res is None:
                 res = (cur_task.name, None, None)
+            if input_handler._stop_flag.is_set():
+                return (cur_task.name, None, None)
             time.sleep(cur_task.get_param("post_delay"))
         else:
             res = func()

@@ -88,6 +88,11 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _registerHotKeys();
+    _webSocketManager = WebSocketManager();
+    _webSocketManager?.addListener(_handleWebSocketUpdate);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _webSocketManager?.initialize();
+    });
     // 检查是否启用开机自启
     _checkAutoStart();
   }

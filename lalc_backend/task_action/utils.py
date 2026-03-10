@@ -1,5 +1,59 @@
 from workflow.task_execution import *
+import re
 
+
+
+def _find_enkephalin_counter_text(ocr_results):
+    candidates = []
+    for text, cx, cy, conf in ocr_results:
+        match = re.search(r"(\d+)\s*/\s*(\d+)", text)
+        if not match:
+            continue
+        try:
+            current = int(match.group(1))
+            maximum = int(match.group(2))
+        except ValueError:
+            continue
+        if maximum <= 0 or current < 0 or current > maximum:
+            continue
+        candidates.append((text, cx, cy, conf))
+
+    if not candidates:
+        return None
+
+    candidates.sort(key=lambda item: (item[2], item[3]), reverse=True)
+    return candidates[0]
+
+
+@TaskExecution.register("open_enkephalin_purchase")
+def exec_open_enkephalin_purchase(self, node: TaskNode, func):
+    screenshot = input_handler.capture_screenshot()
+    logger.info("打开脑啡肽购买弹窗", screenshot)
+
+    ocr_results = recognize_handler.detect_text_in_image(
+        screenshot,
+        mask=[120, 620, 420, 140],
+    )
+    counter_text = _find_enkephalin_counter_text(ocr_results)
+
+    if counter_text is not None:
+        _, cx, cy, conf = counter_text
+        logger.info(f"识别到脑啡肽计数区域，点击 OCR 结果中心: ({cx}, {cy}), conf={conf:.2f}")
+        input_handler.click(cx, cy)
+        return
+
+    fallback_positions = [
+        (398, 726),
+        (390, 650),
+        (430, 710),
+    ]
+    for x, y in fallback_positions:
+        logger.warning(f"未识别到脑啡肽计数文本，回退点击坐标: ({x}, {y})")
+        input_handler.click(x, y)
+        time.sleep(0.5)
+        if recognize_handler.template_match(input_handler.capture_screenshot(), "charge_enkephalin", 0.75):
+            logger.info("回退坐标点击后已检测到脑啡肽购买弹窗")
+            return
 
 
 
@@ -136,12 +190,16 @@ def exec_recharge_enkephalin(self, node: TaskNode, func):
     time.sleep(1)
     res = recognize_handler.detect_text_in_image(input_handler.capture_screenshot(), mask=[680, 300, 120, 45])
     try:
-        index = str.find(res[0][0], "/")
-    except IndexError:
-        logger.info("检测已购买次数失败，当作已购买十次", input_handler.capture_screenshot(), "WARNING")
+        # 允许 OCR 误识别，优先匹配 n/m 形式；失败则退化为“已达上限”避免异常中断
+        text = (res[0][0] if res and len(res[0]) > 0 else "")
+        match = re.search(r"(\d+)\s*/\s*(\d+)", text)
+        if match:
+            already_purchase_count = int(match.group(1))
+        else:
+            raise ValueError(f"OCR 文本非 n/m 格式: '{text}'")
+    except Exception as e:
+        logger.warning(f"检测已购买次数失败，按已达上限处理，避免任务中断: {e}")
         already_purchase_count = 10
-    else:
-        already_purchase_count = int(res[0][0][:index])
 
     cfg = self._get_using_cfg("other_task")
     while already_purchase_count < cfg["lunary_purchase_target"]:

@@ -39,6 +39,9 @@
     "init_limbus_window":{
         "action":"init_limbus_window"
     },
+    "open_enkephalin_purchase":{
+        "action":"open_enkephalin_purchase"
+    },
     "check_out_update": {
         "action": "check_out_update"
     }

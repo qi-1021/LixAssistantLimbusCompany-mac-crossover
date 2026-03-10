@@ -198,7 +198,9 @@ class _Input:
         # 初始化状态对象
         self._foreground_state = ForegroundInputState()
         self._background_state = BackgroundInputState()
-        self._current_state = self._background_state  # 默认状态为后台
+        self._current_state = (
+            self._background_state if IS_WINDOWS else self._foreground_state
+        )
 
         self._screenshot = None
         self._width = 0
@@ -249,8 +251,10 @@ class _Input:
         self._stop_flag.clear()
         # 重置窗口句柄
         self.refresh_window_state()
-        # 确保默认为后台模式
-        self._current_state = self._background_state
+        # 根据平台恢复默认输入模式
+        self._current_state = (
+            self._background_state if IS_WINDOWS else self._foreground_state
+        )
         logger.debug("InputHandler 已重置到初始状态")
 
     def refresh_window_state(self):

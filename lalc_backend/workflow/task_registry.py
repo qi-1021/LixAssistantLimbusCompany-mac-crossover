@@ -163,6 +163,12 @@ def load_all_task_configs():
                 
             # 为每个配置项创建任务节点
             for task_name, task_config in config_data.items():
+                # 调试：检查task_config类型
+                if not isinstance(task_config, dict):
+                    print(f"警告: 文件 {filename} 中任务 {task_name} 的配置不是字典类型: {type(task_config)}")
+                    print(f"配置内容: {task_config}")
+                    continue
+                    
                 # 创建任务节点
                 task_node = create_task_node(task_name, task_config)
                 

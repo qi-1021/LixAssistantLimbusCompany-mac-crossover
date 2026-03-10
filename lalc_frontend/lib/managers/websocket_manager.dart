@@ -95,7 +95,8 @@ class WebSocketManager with ChangeNotifier {
     _addLogMessage('初始化WebSocket连接');
     // 添加额外的调试信息
     debugPrint('当前连接状态 - isConnected: $_isConnected, isConnecting: $_isConnecting');
-    connect();
+    // 在尝试连接前，确保后端已启动或自动唤起
+    _ensureBackendRunning().then((_) => connect());
   }
 
   // 获取下一个要尝试的端口URL
@@ -169,8 +170,64 @@ class WebSocketManager with ChangeNotifier {
     }
   }
 
-  // 处理连接失败
-  void _handleConnectionFailure() {
+  // 新增：检查本机端口并在必要时启动后端
+  Future<void> _ensureBackendRunning() async {
+    try {
+      // 尝试快速建立 TCP 连接来检测后端是否在监听
+      final socket = await Socket.connect('localhost', 8765, timeout: const Duration(milliseconds: 500));
+      socket.destroy();
+      debugPrint('检测到后端正在运行');
+      return;
+    } catch (e) {
+      debugPrint('未检测到后端，尝试启动后端脚本：$e');
+      _addLogMessage('未检测到后端，正在自动启动...');
+      if (Platform.isMacOS) {
+        final candidateRoots = <String>{
+          Directory.current.path,
+          path.normalize(path.join(Directory.current.path, '..')),
+          path.normalize(path.join(Directory.current.path, '..', '..')),
+          path.normalize(path.join(Platform.resolvedExecutable, '..', '..', '..', '..', '..', '..')),
+        };
+        final candidateNames = <String>['启动LALC-mac.sh', '启动LALC.sh'];
+
+        bool started = false;
+        for (final root in candidateRoots) {
+          for (final fileName in candidateNames) {
+            final scriptPath = path.join(root, fileName);
+            if (!File(scriptPath).existsSync()) {
+              continue;
+            }
+
+            try {
+              await Process.start('bash', [scriptPath], workingDirectory: root);
+              debugPrint('已触发 $scriptPath');
+              _addLogMessage('已触发后端脚本: $scriptPath');
+              started = true;
+              break;
+            } catch (e2) {
+              debugPrint('启动后端脚本失败：$e2');
+              _addLogMessage('启动后端失败: $e2');
+            }
+          }
+          if (started) {
+            break;
+          }
+        }
+
+        if (!started) {
+          _addLogMessage('未找到可用的 macOS 后端启动脚本');
+        }
+        // 给后端一些时间启动
+        await Future.delayed(const Duration(seconds: 2));
+      }
+    }
+  }
+
+  // 处理连接失败（可能是端口没开、后端已退出等）
+  Future<void> _handleConnectionFailure() async {
+    // 在发生失败时尝试保证后端运行（如果前端启动较慢导致后端熄火）
+    await _ensureBackendRunning();
+
     // 确保连接状态正确
     _isConnected = false;
     _isConnecting = false;
@@ -600,7 +657,7 @@ class WebSocketManager with ChangeNotifier {
   }
 
   // 处理连接断开（被动）
-  void _handleDisconnect() {
+  Future<void> _handleDisconnect() async {
     final wasConnected = _isConnected;
     final wasConnecting = _isConnecting;
 
@@ -624,7 +681,7 @@ class WebSocketManager with ChangeNotifier {
     }
 
     // 触发连接失败处理逻辑（包括端口轮询或延迟重试）
-    _handleConnectionFailure();
+    await _handleConnectionFailure();
 
     // 更新任务状态为停止
     TaskStatusManager().stopTask();

@@ -8,6 +8,40 @@ import sys
 from typing import Optional, Tuple, List
 
 
+_BROWSER_OWNERS = {
+    "quark",
+    "google chrome",
+    "microsoft edge",
+    "safari",
+    "firefox",
+    "arc",
+    "opera",
+    "brave browser",
+    "brave",
+}
+
+
+def _looks_like_browser_or_document(owner: str, name: str) -> bool:
+    owner_lower = owner.lower().strip()
+    name_lower = name.lower().strip()
+
+    if owner_lower in _BROWSER_OWNERS:
+        return True
+
+    suspicious_tokens = [
+        "github",
+        "gitlab",
+        "contributing.md",
+        "readme",
+        "doc/",
+        "docs/",
+        ".md",
+        "http://",
+        "https://",
+    ]
+    return any(token in name_lower for token in suspicious_tokens)
+
+
 def detect_window_bounds(window_title: str = "LimbusCompany") -> Optional[Tuple[int, int, int, int]]:
     """
     检测窗口边界（left, top, width, height）
@@ -56,6 +90,9 @@ def detect_window_bounds(window_title: str = "LimbusCompany") -> Optional[Tuple[
             owner_lower = owner.lower()
             name_lower = name.lower()
             keyword_lower = window_title.lower()
+
+            if _looks_like_browser_or_document(owner, name):
+                continue
             
             # 应用名称精确匹配（如 LimbusCompany.exe）
             if keyword_lower in owner_lower:
@@ -68,6 +105,14 @@ def detect_window_bounds(window_title: str = "LimbusCompany") -> Optional[Tuple[
             # 窗口标题匹配（优先级较低，避免误匹配浏览器标题）
             if keyword_lower in name_lower:
                 score += 10
+
+            # 对游戏常见标题进一步加分，优先于普通 CrossOver 宿主窗口
+            if any(token in name_lower for token in ['limbuscompany', 'limbus company', '边狱巴士']):
+                score += 40
+
+            # 仅凭标题弱匹配时要求宿主也可信，避免误抓其它普通窗口
+            if score > 0 and score <= 10 and 'crossover' not in owner_lower and keyword_lower not in owner_lower:
+                continue
             
             # 必须有匹配才加入候选
             if score > 0:

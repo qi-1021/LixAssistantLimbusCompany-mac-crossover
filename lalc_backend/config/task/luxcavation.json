@@ -5,6 +5,7 @@
         "inverse":true, 
         "params":{
             "template":"inferno",
+            "mask":[300, 90, 360, 160],
             "post_delay": 1
         },
         "next":[
@@ -18,10 +19,8 @@
         "action":"click",
         "params":{
             "template":"inferno",
-            "target":[
-                440, 
-                160
-            ],
+            "target":"inferno",
+            "mask":[300, 90, 360, 160],
             "post_delay":2
         },
         "next":[
@@ -54,7 +53,7 @@
         "action":"click",
         "params":{
             "pre_delay":1,
-            "target":[750, 490],
+            "target":"skip_battle",
             "template":"skip_battle"
         },
         "next":[
@@ -139,6 +138,7 @@
         "inverse":true, 
         "params":{
             "template":"inferno",
+            "mask":[300, 90, 360, 160],
             "post_delay": 1
         },
         "next":[
@@ -152,10 +152,7 @@
         "action":"click",
         "params":{
             "template":"inferno",
-            "target":[
-                440, 
-                160
-            ],
+            "target":"inferno",
             "post_delay":2
         },
         "next":[
@@ -180,7 +177,7 @@
         "action":"click",
         "params":{
             "pre_delay":1, 
-            "target":[750, 490],
+            "target":"skip_battle",
             "template":"skip_battle"
         },
         "next":[
@@ -233,6 +230,7 @@
         "params":{
             "template":"event_skip"
         },
+            "mask":[300, 90, 360, 160],
         "next":[
             "thread_circle_center"
         ]

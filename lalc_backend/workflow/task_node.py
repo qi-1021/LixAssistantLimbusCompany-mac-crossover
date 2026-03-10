@@ -1,4 +1,5 @@
 import time
+import platform
 try:
     from input.input_handler import input_handler
     from recognize.img_recognizer import recognize_handler
@@ -16,6 +17,15 @@ from utils.logger import init_logger
 
 
 logger = init_logger()
+
+
+IS_MACOS = platform.system() == "Darwin"
+
+
+MAC_TEMPLATE_FALLBACKS = {
+    "main_window_no_text": ["main_drive_no_text"],
+    "main_drive_with_text": ["main_drive_no_text"],
+}
 
 
 class TaskNode:
@@ -162,6 +172,25 @@ class TaskNode:
         elif self.recognition == "template_match":
             template, threshold, mask = self.get_recognition_params()
             self.params["recognize_result"] = recognize_handler.template_match(tmp_screenshot, template, threshold, mask=mask)
+
+            if (
+                IS_MACOS
+                and len(self.get_param("recognize_result")) == 0
+                and template in MAC_TEMPLATE_FALLBACKS
+            ):
+                for fallback_template in MAC_TEMPLATE_FALLBACKS[template]:
+                    fallback_result = recognize_handler.template_match(
+                        tmp_screenshot,
+                        fallback_template,
+                        threshold,
+                        mask=mask,
+                    )
+                    if len(fallback_result) > 0:
+                        self.params["recognize_result"] = fallback_result
+                        logger.debug(
+                            f"macOS/CrossOver 模板回退：{template} -> {fallback_template}"
+                        )
+                        break
         elif self.recognition == "color_template_match":
             template, threshold, mask = self.get_recognition_params()
             self.params["recognize_result"] = recognize_handler.color_template_match(tmp_screenshot, template, threshold, mask=mask)

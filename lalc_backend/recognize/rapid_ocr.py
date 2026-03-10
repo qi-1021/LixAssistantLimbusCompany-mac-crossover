@@ -1,5 +1,6 @@
 import sys
 import os
+import platform
 
 # 添加项目根目录到Python路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -17,6 +18,7 @@ import os
 base_dir = os.path.dirname(__file__)
 yaml_path = os.path.join(base_dir, "rapidocr.yaml")
 img_ocr = RapidOCR(config_path=yaml_path)
+IS_APPLE_SILICON = platform.system() == "Darwin" and platform.machine().lower() in {"arm64", "aarch64"}
 
 
 def detect_text_in_image(image: Image.Image, visualize=False, threshold=0.3, merge_x=True, merge_y=True, debug_image=None):
@@ -30,11 +32,16 @@ def detect_text_in_image(image: Image.Image, visualize=False, threshold=0.3, mer
     :param merge_x: 是否在x方向合并文本（默认True）
     :param merge_y: 是否在y方向合并文本（默认True）
     """
-    # ----------- 预处理 ----------- 
+    # ----------- 预处理（优化：减少CLAHE参数降低耗时）---------- 
     image_cv = pil_to_cv2(image, grayscale=True)
 
-    clahe = cv2.createCLAHE(clipLimit=2, tileGridSize=(16, 16))
+    clahe = cv2.createCLAHE(clipLimit=1.6 if IS_APPLE_SILICON else 1.5, tileGridSize=(8, 8))
     image_cv = clahe.apply(image_cv)
+
+    if IS_APPLE_SILICON:
+        image_cv = cv2.resize(image_cv, None, fx=1.25, fy=1.25, interpolation=cv2.INTER_CUBIC)
+        image_cv = cv2.GaussianBlur(image_cv, (3, 3), 0)
+        image_cv = cv2.addWeighted(image_cv, 1.45, cv2.GaussianBlur(image_cv, (0, 0), 1.2), -0.45, 0)
 
     result = img_ocr(image_cv)
     dt_boxes = result.boxes
@@ -50,6 +57,8 @@ def detect_text_in_image(image: Image.Image, visualize=False, threshold=0.3, mer
     raw_items = []
     for box, text, conf in zip(dt_boxes, texts, scores):
         box = np.array(box, dtype=np.float32)
+        if IS_APPLE_SILICON:
+            box = box / 1.25
         cx = int(box[:, 0].mean())  # 中心x坐标
         cy = int(box[:, 1].mean())  # 中心y坐标
         raw_items.append({

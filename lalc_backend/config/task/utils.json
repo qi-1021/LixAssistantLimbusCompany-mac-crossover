@@ -15,7 +15,8 @@
         "recognition":"template_match",
         "action":"main_window_confirm",
         "params":{
-            "template":"main_window_no_text"
+            "template":"main_window_no_text",
+            "threshold": 0.82
         },
         "next":[
             "check_language"
@@ -29,10 +30,11 @@
     },
     "check_enkephalin":{
         "recognition":"template_match",
-        "action":"click",
+        "action":"open_enkephalin_purchase",
         "inverse": true,
         "params":{
             "template":"charge_enkephalin",
+            "threshold": 0.75,
             "target":[
                 390,
                 650
@@ -100,10 +102,11 @@
         "recognition":"template_match",
         "action":"click",
         "params":{
-            "template":"main_drive_no_text"
+            "template":"main_drive_no_text",
+            "threshold": 0.78,
+            "post_delay": 3.0
         },
         "next":[
-            "game_language_confirm"
         ],
         "interrupt":[
 
@@ -113,10 +116,11 @@
         "recognition":"template_match",
         "action":"click",
         "params":{
-            "template":"main_window_no_text"
+            "template":"main_window_no_text",
+            "threshold": 0.82,
+            "post_delay": 3.0
         },
         "next":[
-            "game_language_confirm"
         ],
         "interrupt":[
 
@@ -125,10 +129,13 @@
     "game_language_confirm":{
         "recognition":"template_match",
         "inverse": true,
-        "action":"report_error",
+        "action":"empty",
         "params":{
-            "template":"main_drive_with_text",
-            "error_msg":"请更换游戏语言为英语（English） | Please switch game language to English"
-        }
+            "template":"main_drive_no_text",
+            "threshold": 0.78
+        },
+        "next":[
+            
+        ]
     }
 }

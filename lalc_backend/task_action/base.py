@@ -4,7 +4,14 @@ from workflow.task_execution import *
 def exec_check_out_update(self, node:TaskNode, func):
     old = node.get_param("execute_count", 0)
     node.set_param("execute_count", old + 1)
-    logger.info(f"[check_out_update] 节点<{node.name}> 计数 + 1，当前：{old + 1}")
+    # 添加循环保护机制
+    loop_count = node.get_param("_loop_protection_count", 0)
+    node.set_param("_loop_protection_count", loop_count + 1)
+    logger.info(f"[check_out_update] 节点<{node.name}> 计数 + 1，当前：{old + 1}，循环计数：{loop_count + 1}")
+    
+    # 如果循环次数过多，警告并重置
+    if loop_count > 100:
+        logger.warning(f"节点<{node.name}> 循环次数过多({loop_count})，可能存在死循环，建议检查任务配置")
 
 
 @TaskExecution.register("init_limbus_window")
