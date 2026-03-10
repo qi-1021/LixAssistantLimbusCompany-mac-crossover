@@ -25,7 +25,7 @@
 
 [**简体中文**](https://github.com/HSLix/LixAssistantLimbusCompany/blob/master/README.md) | [English(translated by google)](https://github-com.translate.goog/HSLix/LixAssistantLimbusCompany/blob/master/README.md?_x_tr_sl=auto&_x_tr_tl=en&_x_tr_hl=zh-CN&_x_tr_pto=wapp)
           
-
+改不了了，不会改了，虽然能在macos上运行，但是ocr基本上实现不了什么，只能说是一个失败的产物。 不过还是留着吧，毕竟花了小半天，万一以后会了呢。
 - LALC 是 LixAssistantLimbusCompany 各取大写字母的缩写
 
 - 是月计次世代 ~~大嘘~~ 手游(Steam?) LimbusCompany 的助手
@@ -298,5 +298,6 @@
 ## Star History
 
 ~~悄悄更个图，应该没人发现吧~~
+
 
 [![Star History Chart](https://api.star-history.com/svg?repos=HSLix/LixAssistantLimbusCompany&type=Date)](https://www.star-history.com/#HSLix/LixAssistantLimbusCompany&Date)
