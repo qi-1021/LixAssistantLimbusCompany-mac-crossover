@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:platform_device_id/platform_device_id.dart';
 import 'package:logger/logger.dart';
+import 'device_id_helper.dart';
 
 // 初始化logger实例
 final _logger = Logger(
@@ -28,14 +28,14 @@ class EncryptHelper {
       }
     }
     
-    // 对于非Windows平台或Windows命令失败时，使用platform_device_id
+    // 对于非Windows平台或Windows命令失败时，使用本地设备ID实现
     try {
-      final deviceId = await PlatformDeviceId.getDeviceId;
-      if (deviceId != null) {
+      final deviceId = await getPlatformDeviceId();
+      if (deviceId.isNotEmpty) {
         return deviceId;
       }
     } catch (e) {
-      _logger.e('使用platform_device_id获取设备ID失败: $e');
+      _logger.e('使用本地设备ID获取失败: $e');
     }
     
     final error = Exception("获取设备 ID 失败");

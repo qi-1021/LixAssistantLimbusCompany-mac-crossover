@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# LALC 启动脚本（简化版，无需手动激活虚拟环境）
-# 用户可以直接双击运行此文件
+# LALC 启动脚本 - 同时启动前后端
+# 支持同时运行 macOS 前端和 Python 后端
 #
 
 set -euo pipefail
@@ -13,9 +13,23 @@ cd "$ROOT_DIR"
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
 NC='\033[0m'
 
-# 错误处理
+# 存储后端 PID，以便最后清理
+BACKEND_PID=""
+cleanup() {
+  if [ -n "$BACKEND_PID" ]; then
+    echo ""
+    echo "${YELLOW}正在关闭后端服务...${NC}"
+    kill "$BACKEND_PID" 2>/dev/null || true
+    wait "$BACKEND_PID" 2>/dev/null || true
+    echo "${GREEN}后端服务已停止${NC}"
+  fi
+}
+trap cleanup EXIT
+
+# 错误处理函数
 show_error() {
   echo ""
   echo "╔════════════════════════════════════════════════════════╗"
@@ -49,8 +63,15 @@ fi
 
 echo ""
 echo "╔════════════════════════════════════════════════════════╗"
-echo "║                   LALC 正在启动...                     ║"
+echo "║            LALC - Limbus Company 自动化助手           ║"
+echo "║         正在启动前后端服务（前端 + 后端）...          ║"
 echo "╚════════════════════════════════════════════════════════╝"
+echo ""
+
+# 清理 macOS 系统文件
+echo "🧹 清理 macOS 系统文件..."
+find . -name ".DS_Store" -delete 2>/dev/null || true
+echo "${GREEN}✓ .DS_Store 已清理${NC}"
 echo ""
 
 # 检查系统权限提示
@@ -60,22 +81,63 @@ echo "  （您可能需要在『系统设置』→『隐私与安全性』中"
 echo "   为『终端』授予『屏幕录制』和『辅助功能』权限）"
 echo ""
 
-# 获取窗口信息
-echo "🔍 检测到的窗口信息："
-WINDOW_INFO=$(cd lalc_backend && python -m utils.window_detector --detect "LimbusCompany" 2>/dev/null || echo "未找到窗口")
-echo "$WINDOW_INFO"
-echo ""
-
-# 启动后端服务
-echo "🚀 启动 LALC 后端服务（WebSocket 服务器）..."
-echo ""
-
+# 启动后端服务（后台）
+echo "🚀 启动 LALC 后端服务（WebSocket 服务器 ws://localhost:8765）..."
 cd lalc_backend
-python main.py
 
-# 如果到这里表示服务已停止
+# 清理日志目录
+mkdir -p logs
+rm -f logs/server.log
+
+# 在后台启动后端
+python main.py > logs/server.log 2>&1 &
+BACKEND_PID=$!
+echo "   后端进程 PID: $BACKEND_PID"
+
+# 等待后端监听端口
+echo "⏳ 等待后端服务启动..."
+for i in {1..20}; do
+  if lsof -i :8765 >/dev/null 2>&1; then
+    echo "${GREEN}✓ 后端服务已启动，监听 ws://localhost:8765${NC}"
+    break
+  fi
+  sleep 0.5
+  if [ $i -eq 20 ]; then
+    echo "${RED}✗ 后端服务启动超时，请检查日志：${NC}"
+    tail -20 logs/server.log
+    exit 1
+  fi
+done
+
+echo ""
+echo "📱 启动 LALC 前端应用..."
+cd "$ROOT_DIR/lalc_frontend"
+
+# 启动 Flutter 应用
+open build/macos/Build/Products/Release/lalc_frontend.app &
+FRONTEND_PID=$!
+echo "${GREEN}✓ 前端应用已启动${NC}"
+
 echo ""
 echo "════════════════════════════════════════════════════════"
-echo "LALC 已关闭"
+echo "✅ LALC 前后端服务已启动"
+echo ""
+echo "详情："
+echo "  • 后端服务: ws://localhost:8765"
+echo "  • 前端应用: macOS 应用窗口"
+echo "  • 日志位置: lalc_backend/logs/server.log"
+echo ""
+echo "提示："
+echo "  • 在『边狱巴士』游戏窗口启动后，点击『开始自动化』"
+echo "  • 关闭此终端窗口将停止后端服务和前端亲应用"
 echo "════════════════════════════════════════════════════════"
-read -p "按 Enter 键关闭此窗口..."
+echo ""
+
+# 等待后端进程
+wait $BACKEND_PID 2>/dev/null || true
+
+# 脚本结束
+echo ""
+echo "════════════════════════════════════════════════════════"
+echo "⏹️  LALC 已关闭"
+echo "════════════════════════════════════════════════════════"

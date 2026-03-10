@@ -6,9 +6,9 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import '../../utils/zip_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:platform_device_id/platform_device_id.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import '../../utils/encrypt_helper.dart';
+import '../utils/device_id_helper.dart';
 
 /// 语言状态管理类
 class LanguageManager with ChangeNotifier {
@@ -1177,7 +1177,8 @@ class ConfigManager {
 /// 获取设备ID
 Future<String> getDeviceId() async {
   try {
-    return await PlatformDeviceId.getDeviceId ?? 'default_device_id';
+    final deviceId = await getPlatformDeviceId();
+    return deviceId.isNotEmpty ? deviceId : 'default_device_id';
   } catch (e) {
     logger.e('获取设备ID失败: $e');
     return 'default_device_id';
