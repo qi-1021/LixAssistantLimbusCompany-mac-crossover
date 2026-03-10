@@ -1,0 +1,22 @@
+{
+  "check_node_target_count": 0,
+  "luxcavation_mode": "enter",
+  "exp_stage": "09",
+  "team_orders": [
+    [
+      "Hong Lu",
+      "Ryoshu",
+      "Faust",
+      "Sinclair",
+      "Heathcliff",
+      "Ishmael",
+      "Rodion",
+      "Yi Sang",
+      "Outis",
+      "Gregor"
+    ]
+  ],
+  "team_indexes": [
+    6
+  ]
+}

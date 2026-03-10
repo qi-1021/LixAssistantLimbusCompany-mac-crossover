@@ -1,0 +1,130 @@
+import sys
+import os
+import ctypes
+import re
+import asyncio
+import subprocess
+
+try:
+    # 添加项目根目录和相关子目录到sys.path
+    script_dir = os.path.dirname(os.path.abspath(__file__))  # 这是PyStand根目录
+    print(f"script_dir: {script_dir}")
+
+    # 优先添加script目录到sys.path开头，确保正确导入
+    sys.path.insert(0, os.path.join(script_dir, 'script'))
+    print(f"Added to sys.path: {os.path.join(script_dir, 'script')}")
+
+    # 添加其他子目录
+    sys.path.insert(1, os.path.join(script_dir, 'script', 'workflow'))
+    sys.path.insert(2, os.path.join(script_dir, 'script', 'input'))
+    sys.path.insert(3, os.path.join(script_dir, 'script', 'recognize'))
+    sys.path.insert(4, os.path.join(script_dir, 'script', 'recognize', 'models'))
+    sys.path.insert(5, os.path.join(script_dir, 'script', 'utils'))
+    sys.path.insert(6, os.path.join(script_dir, 'script', 'config'))
+    sys.path.insert(7, script_dir)  # PyStand根目录放在最后
+
+    print(f"Full sys.path: {sys.path}")
+
+    # 检查当前的路径上是否为全英文路径（英文字符 空格 下划线等常见符号），如果不是就用os.system('msg * "这是提醒内容"') 来中英文提醒需要把路径放到全英文的路径下，和非法字符，同时退出
+    def is_valid_path(path):
+        """检查路径是否包含非英文字符"""
+        # 检查路径是否只包含字母、数字、空格、下划线、连字符和点
+        valid_pattern = re.compile(r'^[a-zA-Z0-9\s_\-./\\:]+$')
+        return valid_pattern.match(path) is not None
+
+    if not is_valid_path(script_dir):
+        raise Exception(f"路径包含非英文字符！请将程序放在全英文路径下(例如：D:/LALC)，当前路径: {script_dir}。。Path contains non-English characters, please put the program in an English path(such as D:/LALC). Current path: {script_dir}")
+
+    # 检查当前的路径上是否有叫做 lalc_frontend 的文件夹，有的话把某个变量设为 True
+    frontend_exists = os.path.exists(os.path.join(script_dir, 'lalc_frontend'))
+
+    # 设置当前工作目录为script目录，确保相对路径引用正确
+    os.chdir(os.path.join(script_dir, 'script'))
+    print(f"Current working directory changed to: {os.getcwd()}")
+
+    def run_as_admin():
+        """以管理员权限重新运行PyStand.exe"""
+        is_admin = bool(ctypes.windll.shell32.IsUserAnAdmin())
+
+        if is_admin:
+            print("已是管理员权限")
+            return True
+
+        # 请求管理员权限，运行PyStand.exe
+        print("正在请求管理员权限...")
+        # 获取PyStand.exe的路径
+        pystand_name = "LixAssistantLimbusCompany.exe" if frontend_exists else 'lalc_backend.exe'
+        pystand_exe = os.path.join(script_dir, pystand_name)
+        ret = ctypes.windll.shell32.ShellExecuteW(
+            None, "runas", pystand_exe, "", None, 1
+        )
+        # ShellExecuteW 返回值大于32表示成功
+        if ret <= 32:
+            raise Exception(f"请求管理员权限失败，返回值: {ret}。Failed to request administrator privileges, return value: {ret}.")
+        return False
+        
+
+    # 检查是否以管理员权限运行，如果不是则请求权限
+    if not run_as_admin():
+        print("已申请管理员权限并重新启动，当前进程 3 秒后退出...")
+        from time import sleep
+        sleep(3)
+        sys.exit(0)
+
+    async def launch_frontend_after(delay: int = 3):
+        """延迟 delay 秒后再启动前端"""
+        await asyncio.sleep(delay)
+
+        # 1. 重置 DLL 搜索路径，避免 PyStand 污染子进程环境
+        try:
+            ctypes.windll.kernel32.SetDllDirectoryW(None)
+            print("[launch_frontend_after] DLL 目录已重置为系统默认")
+        except Exception as e:
+            print(f"[launch_frontend_after] 警告：重置 DLL 目录失败: {e}")
+
+        frontend_exe_path = os.path.join(script_dir, 'lalc_frontend', 'lalc_frontend.exe')
+
+        if os.path.exists(frontend_exe_path):
+            print(f"[launch_frontend_after] 启动前端程序（已延迟 {delay} 秒）...")
+
+            try:
+                # 2. 使用 subprocess 启动前端，避免 ShellExecute + explorer 黑科技
+                creationflags = 0
+                # 仅在 Windows 下定义这些标志，打包后环境即是 Windows
+                creationflags |= getattr(subprocess, 'DETACHED_PROCESS', 0)
+                creationflags |= getattr(subprocess, 'CREATE_NEW_PROCESS_GROUP', 0)
+
+                proc = subprocess.Popen(
+                    [frontend_exe_path],
+                    shell=False,
+                    cwd=os.path.dirname(frontend_exe_path),  # 前端工作目录设为其所在目录
+                    start_new_session=True,
+                    creationflags=creationflags
+                )
+                print(f"[launch_frontend_after] 前端进程已启动, PID={proc.pid}")
+            except Exception as e:
+                # 出错时不要直接 kill 后端，用日志提示
+                print(f"[launch_frontend_after] 启动前端失败: {e}")
+        else:
+            print("[launch_frontend_after] 前端可执行文件不存在，跳过启动")
+
+    async def main_wrapper():
+        """把原来的同步 main 包一层，实现延迟启动前端"""
+        # 如果前面发现根目录有 lalc_frontend, 就调度一个延迟任务
+        if frontend_exists:
+            asyncio.create_task(launch_frontend_after(2))
+
+        # 立即导入并运行真正的后端主循环
+        import main
+        await main.amain()          # 这里会阻塞到后端整个生命周期结束
+    
+    asyncio.run(main_wrapper())
+
+except Exception as e:
+    error_msg = f"运行主程序时发生错误（An error occurred）: {e}"
+    import ctypes
+    ctypes.windll.user32.MessageBoxW(0, error_msg, 'LALC 错误', 0x10)
+    import traceback
+    traceback.print_exc()
+    input("按回车键关闭...")
+    sys.exit(1)
